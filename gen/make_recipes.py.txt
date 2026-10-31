@@ -1,0 +1,47 @@
+import re, sys, collections
+src = sys.argv[1]; out = sys.argv[2]
+s = open(src).read()
+a = s.index('PROFESSION_DATA.CLASSIC = {'); b = s.index('PROFESSION_DATA.BCC', a)
+v = s[a:b]
+pat = re.compile(r'\[(\d+)\] = \{ (nil|\d+), (\d+), (\d+), (\d+), (\d+), \{ ([\d, ]*) \}, \{ ([\d, ]*) \}(?:, (\d+))? \}')
+KEEP = {2: 'Blacksmithing', 3: 'Leatherworking', 7: 'Mining', 8: 'Tailoring', 9: 'Engineering'}
+rows = []
+skipped = collections.Counter()
+for m in pat.finditer(v):
+    spell, item, prof, minl, low, high, regs, cnts, made = m.groups()
+    spell, prof = int(spell), int(prof)
+    if prof not in KEEP: continue
+    if item == 'nil': skipped['no item'] += 1; continue
+    item = int(item)
+    regs = [int(x) for x in regs.split(',') if x.strip()]
+    cnts = [int(x) for x in cnts.split(',') if x.strip()]
+    if spell >= 100000 or item >= 200000 or any(r >= 200000 for r in regs):
+        skipped['season of discovery'] += 1; continue
+    assert len(regs) == len(cnts), spell
+    rows.append((spell, item, prof, int(minl), regs, cnts, int(made) if made else 1))
+rows.sort(key=lambda r: (r[2], r[3], r[0]))
+c = collections.Counter(KEEP[r[2]] for r in rows)
+with open(out, 'w') as f:
+    f.write('''--[[ Data_Recipes.lua -- GENERATED, do not edit by hand.
+Classic Era crafting recipes for Blacksmithing, Leatherworking, Mining (smelting),
+Tailoring and Engineering.
+
+Source: AtlasLootClassic's Data/Profession.lua (PROFESSION_DATA.CLASSIC, GPL v2),
+with Season of Discovery recipes removed (spell or item IDs above 100000/200000).
+Regenerate with gen/make_recipes.py rather than editing.
+
+  [spellID] = { createdItemID, profession, minSkill, { reagentID, count, ... }, numMade }
+
+Item level, quality and armor/weapon class are NOT stored here -- the addon reads
+them from GetItemInfo at runtime, so this file cannot drift from the game on them.
+]]
+local SO = _G.ShuffleOptimizer
+SO.ProfessionName = { [2] = "Blacksmithing", [3] = "Leatherworking", [7] = "Mining",
+                      [8] = "Tailoring", [9] = "Engineering" }
+SO.Recipes = {
+''')
+    for spell, item, prof, minl, regs, cnts, made in rows:
+        flat = ', '.join(f'{r}, {n}' for r, n in zip(regs, cnts))
+        f.write(f'    [{spell}] = {{ {item}, {prof}, {minl}, {{ {flat} }}, {made} }},\n')
+    f.write('}\n')
+print(len(rows), dict(c), dict(skipped))

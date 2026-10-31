@@ -1,0 +1,2 @@
+-- Removed in v0.2: recipes now come from LibProfessionDB (see Recipes.lua).
+-- This file is no longer listed in the .toc and can be deleted.

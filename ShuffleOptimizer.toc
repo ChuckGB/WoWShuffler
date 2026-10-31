@@ -1,0 +1,27 @@
+## Interface: 11509
+## Title: Shuffle Optimizer
+## Notes: Ranks every craftable item by craft-then-disenchant profit at your scanned prices.
+## Author: built with Claude
+## Version: 0.2
+## SavedVariables: ShuffleOptimizerDB
+## Dependencies: ProfessionDB, ItemDB
+## OptionalDeps: Auctionator, TradeSkillMaster, ElvUI, EllesmereUI
+## X-Category: Auction/Economy
+
+libs\LibStub\LibStub.lua
+libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
+
+Core.lua
+Data_Disenchant.lua
+Data_NumMade.lua
+Recipes.lua
+Optimizer.lua
+Prices.lua
+Items.lua
+Known.lua
+Skin.lua
+UI.lua
+Minimap.lua
+Init.lua
